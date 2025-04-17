@@ -13,7 +13,7 @@ class Book(BookBase):
     id: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class Headline(BaseModel):
     title: str

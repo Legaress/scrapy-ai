@@ -1,56 +1,78 @@
-from fastapi import FastAPI, HTTPException, Query
-from scrape_book import BookScraper
-from models import BookRepository
-from scrape_hn import HackerNewsScraper
-from schemas import (
-    BookSearchResponse, HeadlinesResponse, Book, Headline
-)
+from fastapi import FastAPI, HTTPException
+from core.config import settings
+from services.scrape_book import BookScraper
+from services.scrape_hn import HackerNewsScraper
+from utils.schemas import BookSearchResponse, HeadlinesResponse
+import logging
+import asyncio
 
-app = FastAPI(
-    title="Book Scraper & Hacker News API",
-    description="API for book search and real-time Hacker News headlines",
-    version="1.0.0"
-)
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-@app.post("/init", summary="Initialize book database")
-async def init_scrape():
-    """Initialize the book database with sample data"""
-    try:
-        scraper =  BookScraper()
-        count = scraper.scrape()
-        return {"status": "success", "message": f"Initialized with {count} books"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+app = FastAPI()
 
-@app.get("/books/search", response_model=BookSearchResponse, summary="Search books")
-async def search_books(
-    query: str = Query(..., description="Search term for title")
-):
-    """Search books by title or author with optional category filter"""
-    if not query:
-        raise HTTPException(status_code=400, detail="Query parameter is required")
+@app.get("/")   
+async def root():
+    """
+    Root endpoint.
     
-    books = BookRepository.search_books(query)
-    return {"count": len(books), "books": books}
+    Returns:
+        dict: Welcome message
+    """
+    return {
+        "message": "Welcome to the Book Scraper & Hacker News API",
+        "docs_url": "/docs",
+        "redoc_url": "/redoc"
+    }
 
-@app.get("/headlines", response_model=HeadlinesResponse, summary="Get Hacker News headlines")
+@app.post("/init")
+async def init_scrape():
+    """
+    Initialize book scraping process.
+    
+    Returns:
+        dict: Status message indicating scraping has started
+        
+    Raises:
+        HTTPException: If scraping fails or encounters an error
+    """
+    try:
+        scraper = BookScraper()
+        await scraper.scrape_books()
+        return {"status": "success", "message": "Book scraping process initiated"}
+    except Exception as e:
+        logger.error(f"Error during book scraping: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to initiate book scraping: {str(e)}"
+        )
+
+@app.get("/headlines")
 async def get_headlines():
-    """Get current Hacker News headlines (always fresh)"""
+    """
+    Get Hacker News headlines.
+    
+    Returns:
+        HeadlinesResponse: List of headlines with their scores and URLs
+        
+    Raises:
+        HTTPException: If headline scraping fails or encounters an error
+    """
     try:
         scraper = HackerNewsScraper()
-        headlines = scraper.fetch_top_stories(pages=1)
-        return {"count": len(headlines), "headlines": headlines}
+        # Run the multithreaded fetch_top_stories method in a separate thread
+        headlines = await asyncio.to_thread(scraper.fetch_top_stories)
+        return HeadlinesResponse(
+            status="success",
+            count=len(headlines),
+            headlines=headlines
+        )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    
-@app.get("/books", response_model=BookSearchResponse, summary="Get books")
-async def get_books(
-    category: str = Query(None, description="Filter by category")
-):
-    """Get books with optional category filter"""
-    books = BookRepository.get_books(category)
-    return {"count": len(books), "books": books}
+        logger.error(f"Error fetching headlines: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to fetch headlines: {str(e)}"
+        )
 
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
+

@@ -1,8 +1,8 @@
 <template>
-  <WelcomeBanner />
-</template>
-
-<script setup>
+    <WelcomeBanner />
+  </template>
+  
+  <script setup>
 
 import WelcomeBanner from '@/components/WelcomeBanner.vue';
-</script>
+  </script>

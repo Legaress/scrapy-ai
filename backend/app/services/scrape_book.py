@@ -4,8 +4,8 @@ import requests
 from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 import chardet
-from config import settings
-from models import Book, BookRepository
+from core.config import settings
+from utils.models import Book, BookRepository
 from typing import Optional, List, Tuple
 from concurrent.futures import ThreadPoolExecutor, as_completed
 

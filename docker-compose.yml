@@ -7,18 +7,18 @@ services:
     volumes:
       - redis_data:/data
 
-  # selenium:
-  #   image: selenium/standalone-chrome:latest
-  #   container_name: frodo-selenium
-  #   ports:
-  #     - "14440:4444"
-  #   environment:
-  #     - SE_NODE_ENABLE_MANAGED_DOWNLOADS=true
-  #     - SE_OPTS=--enable-managed-downloads true
-  #     - SE_LOG_LEVEL=INFO
-  #   #      - SE_BROWSER_ARGS_INCOGNITO=--incognitos
-  #   restart: always
-  #   shm_size: 4gb
+  selenium:
+    image: selenium/standalone-chrome:latest
+    container_name: frodo-selenium
+    ports:
+      - "14440:4444"
+    environment:
+      - SE_NODE_ENABLE_MANAGED_DOWNLOADS=true
+      - SE_OPTS=--enable-managed-downloads true
+      - SE_LOG_LEVEL=INFO
+    #      - SE_BROWSER_ARGS_INCOGNITO=--incognitos
+    restart: always
+    shm_size: 4gb
 
 
   backend:
@@ -59,7 +59,7 @@ services:
       - N8N_BASIC_AUTH_PASSWORD=admin
       - N8N_HOST=n8n
       - N8N_PORT=5678
-      - REDIS_HOST=frodo-redis
+      - REDIS_HOST=redis
       - REDIS_PORT=6379
       - N8N_SECURE_COOKIE=false
       - N8N_RUNNERS_ENABLED=true

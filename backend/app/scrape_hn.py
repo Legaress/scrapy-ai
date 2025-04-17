@@ -1,21 +1,36 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException, WebDriverException
 import time
+import logging
+from config import settings
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class HackerNewsScraper:
-    def __init__(self, selenium_host='selenium'):
-        # Configurar conexión remota a Selenium
-        self.selenium_host = selenium_host
+    def __init__(self):
         self.driver = None
         
     def connect(self):
-        """Establece conexión con el contenedor Selenium"""
-        self.driver = webdriver.Remote(
-            command_executor=f'http://{self.selenium_host}:4444/wd/hub',
-            options=webdriver.ChromeOptions()
-        )
+        """Establishes connection with the Selenium container"""
+        try:
+            chrome_options = webdriver.ChromeOptions()
+            chrome_options.add_argument('--no-sandbox')
+            chrome_options.add_argument('--headless')
+            chrome_options.add_argument('--disable-dev-shm-usage')
+            
+            logger.info(f"Connecting to Selenium at {settings.selenium_command_executor}")
+            self.driver = webdriver.Remote(
+                command_executor=settings.selenium_command_executor,
+                options=chrome_options
+            )
+            logger.info("Successfully connected to Selenium")
+        except WebDriverException as e:
+            logger.error(f"Failed to connect to Selenium: {str(e)}")
+            raise
     
     def fetch_top_stories(self, pages: int = 5):
         """
@@ -27,7 +42,7 @@ class HackerNewsScraper:
             self.connect()
             
         stories = []
-        base_url = "https://news.ycombinator.com/news"
+        base_url = settings.hnews_site_url
         
         try:
             for page in range(1, pages + 1):
@@ -36,11 +51,13 @@ class HackerNewsScraper:
                 else:
                     url = base_url
                     
+                logger.info(f"Fetching page {page}: {url}")
                 self.driver.get(url)
                 time.sleep(2)  # Allow page to load
                 
                 # Find all story rows
                 rows = self.driver.find_elements(By.CSS_SELECTOR, "tr.athing")
+                logger.info(f"Found {len(rows)} stories on page {page}")
                 
                 for row in rows:
                     try:
@@ -58,12 +75,18 @@ class HackerNewsScraper:
                             "score": int(score),
                             "url": url
                         })
-                    except NoSuchElementException:
-                        # Skip if any element is missing
+                    except NoSuchElementException as e:
+                        logger.warning(f"Failed to extract story details: {str(e)}")
                         continue
+        except Exception as e:
+            logger.error(f"Error during scraping: {str(e)}")
+            raise
         finally:
             if self.driver:
-                self.driver.quit()
+                try:
+                    self.driver.quit()
+                except Exception as e:
+                    logger.error(f"Error closing Selenium driver: {str(e)}")
         
         return stories
 
@@ -76,5 +99,5 @@ def get_hacker_news_top_stories():
     try:
         return scraper.fetch_top_stories()
     except Exception as e:
-        print(f"Error fetching Hacker News: {e}")
+        logger.error(f"Error fetching Hacker News: {str(e)}")
         return []

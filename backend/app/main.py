@@ -24,8 +24,7 @@ async def init_scrape():
 
 @app.get("/books/search", response_model=BookSearchResponse, summary="Search books")
 async def search_books(
-    query: str = Query(..., description="Search term for title or author"),
-    category = Query(None, description="Filter by category")
+    query: str = Query(..., description="Search term for title")
 ):
     """Search books by title or author with optional category filter"""
     if not query:
@@ -38,11 +37,12 @@ async def search_books(
 async def get_headlines():
     """Get current Hacker News headlines (always fresh)"""
     try:
-        with HackerNewsScraper() as scraper:
-            headlines = scraper.fetch_top_stories(pages=1)
+        scraper = HackerNewsScraper()
+        headlines = scraper.fetch_top_stories(pages=1)
         return {"count": len(headlines), "headlines": headlines}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
 @app.get("/books", response_model=BookSearchResponse, summary="Get books")
 async def get_books(
     category: str = Query(None, description="Filter by category")

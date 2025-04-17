@@ -35,3 +35,5 @@ WORKDIR /app
 # Install project dependencies
 RUN poetry install --no-interaction --no-ansi --no-root
 
+COPY ./app .
+

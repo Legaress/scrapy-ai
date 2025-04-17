@@ -30,7 +30,7 @@ async def search_books(
     if not query:
         raise HTTPException(status_code=400, detail="Query parameter is required")
     
-    books = BookRepository.search_books(query, category)
+    books = BookRepository.search_books(query)
     return {"count": len(books), "books": books}
 
 @app.get("/headlines", response_model=HeadlinesResponse, summary="Get Hacker News headlines")

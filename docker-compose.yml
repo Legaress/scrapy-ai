@@ -20,12 +20,16 @@ services:
     restart: always
     shm_size: 4gb
 
-
   backend:
     build:
       context: ./backend
     container_name: frodo-backend
     command: poetry run uvicorn main:app --reload --host 0.0.0.0 --port 7013
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./backend/app
+          target: /app
     ports:
       - "18000:7013"
     depends_on:
@@ -33,20 +37,26 @@ services:
     environment:
       - REDIS_HOST=frodo-redis
       - REDIS_PORT=6379
-    volumes:
-      - ./backend/app:/app 
 
-  #  frontend:
-  #    build:
-  #      context: ./frontend
-  #    container_name: frodo-frontend
-  #    ports:
-  #      - "3000:3000"
-  #    volumes:
-  #      - ./frontend:/app
-  #    depends_on:
-  #      - n8n
-
+  frontend:
+    build:
+      context: ./frontend
+    container_name: frodo-frontend
+    command: npm run dev -- --host
+    develop:
+      watch:
+        - action: sync
+          path: ./frontend/app
+          target: /app
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: ./frontend/app/package.json
+          target: /app/package.json
+    ports:
+      - "13000:3000"
+    depends_on:
+      - n8n
 
   n8n:
     image: n8nio/n8n

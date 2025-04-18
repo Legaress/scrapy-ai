@@ -1,9 +1,10 @@
-from redis import Redis
+from redis.asyncio import Redis
 from core.config import settings
 from pydantic import BaseModel
 from typing import Optional, List
 import json
 import hashlib
+import logging
 
 class Book(BaseModel):
     """Model representing a book with its details"""
@@ -15,11 +16,8 @@ class Book(BaseModel):
 
     def generate_id(self) -> str:
         """Generate a unique ID for the book based on its content"""
-        # Create a string with book details that should be unique
         content = f"{self.title.lower()}|{self.category.lower()}|{self.price}"
-        # Generate SHA-256 hash
         hash_object = hashlib.sha256(content.encode())
-        # Return first 12 characters of the hash as the ID
         return hash_object.hexdigest()[:12]
 
     class Config:
@@ -59,52 +57,58 @@ class BookRepository:
     def __init__(self):
         self.redis = RedisManager().client
 
-    def store_book(self, book: Book) -> str:
+    async def store_book(self, book: Book) -> str:
         """Store book in Redis"""
-        # Generate a hash-based ID for the book
         book.id = book.generate_id()
         book_key = f'book:{book.id}'
         
         # Check if book already exists
-        if self.redis.exists(book_key):
+        if await self.redis.exists(book_key):
             return book.id
         
         # Store book data and add to category index in a single transaction
-        pipe = self.redis.pipeline()
-        pipe.set(book_key, book.model_dump_json())
-        pipe.sadd(f"category:{book.category.lower()}", book_key)
-        pipe.execute()
+        async with self.redis.pipeline() as pipe:
+            await pipe.set(book_key, book.model_dump_json()).execute()
+            await pipe.sadd(f"category:{book.category.lower()}", book_key).execute()
         
         return book.id
 
-    def get_books(self, category: Optional[str] = None) -> List[Book]:
-        """Retrieve books from Redis, optionally filtered by category"""
-        book_keys = (self.redis.smembers(f"category:{category.lower()}") 
-                    if category else self.redis.keys('book:*'))
-        
-        if not book_keys:
-            return []
+    async def get_books(self, category: Optional[str] = None) -> List[str]:
+        """Retrieve BOOK TITLES from Redis, optionally filtered by category"""
+        try:
+            # 1. Get book keys
+            book_keys = (
+                [f"book:{book_id}" for book_id in await self.redis.smembers(f"category:{category.lower()}")]
+                if category
+                else [key for key in await self.redis.keys('book:*')]
+            )
             
-        # Use pipeline for better performance when fetching multiple books
-        pipe = self.redis.pipeline()
-        for key in book_keys:
-            pipe.get(key)
-        book_data_list = pipe.execute()
-        
-        books = []
-        for key, book_data in zip(book_keys, book_data_list):
-            if book_data:
-                book_dict = json.loads(book_data)
-                book_dict['id'] = key.split(':')[1]
-                books.append(Book(**book_dict))
-        return books
+            if not book_keys:
+                return []
 
-    def search_books(self, query: str, category: Optional[str] = None) -> List[Book]:
-        """Search books by title, optionally filtered by category"""
-        query = query.lower()
-        return [book for book in self.get_books(category) 
-                if query in book.title.lower()]
+            # 2. Get data in pipeline
+            async with self.redis.pipeline() as pipe:
+                for key in book_keys:
+                    await pipe.get(key)
+                book_data_list = await pipe.execute()
 
-    def clear_all(self):
+            # 3. Extract only titles
+            titles = []
+            for key, book_data in zip(book_keys, book_data_list):
+                if book_data:
+                    try:
+                        book_dict = json.loads(book_data)
+                        titles.append(book_dict['title'])
+                    except (json.JSONDecodeError, KeyError) as e:
+                        logging.warning(f"Error processing book {key}: {str(e)}")
+                        continue
+            
+            return titles
+
+        except Exception as e:
+            logging.error(f"Error in get_books: {str(e)}")
+            return []
+
+    async def clear_all(self):
         """Clear all book data from Redis"""
-        self.redis.flushdb()
+        await self.redis.flushdb()

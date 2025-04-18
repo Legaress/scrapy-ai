@@ -1,102 +1,72 @@
-import { defineStore } from 'pinia';
+import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
 
-export const useChatStore = defineStore('chat', {
-    id: 'chat',
-    state: () => ({
-        messages: [
-            { 
-                text: '¡Hola! ¿En qué puedo ayudarte hoy?', 
-                sender: 'bot',
-                timestamp: new Date()
-            }
-        ],
-        isLoading: false,
-        isTyping: false,
-        errorMessage: '',
-    }),
+export const useChatStore = defineStore('chat', () => {
+  const messages = ref([])
+  const isLoading = ref(false)
+  const error = ref(null)
 
-    actions: {
-        async clearMessages() {
-            this.messages = [
-                { 
-                    text: '¡Hola! ¿En qué puedo ayudarte hoy?', 
-                    sender: 'bot',
-                    timestamp: new Date()
-                }
-            ];
-            this.isLoading = false;
-            this.isTyping = false;
-            this.errorMessage = '';
+  // Computed property for reversed messages (to show newest at bottom)
+  const displayedMessages = computed(() => [...messages.value])
 
-            const url = import.meta.env.VITE_FLOWISE_API + import.meta.env.VITE_FLOWISE_ENDPOINT_CHATMESSAGE + import.meta.env.VITE_CHATFLOW_ID;
-            const token = import.meta.env.VITE_FLOWISE_TOKEN;
-            const response = await fetch(url, {
-                method: 'DELETE',
-                headers: {
-                  "Authorization": token
-                },
-            });
-            const data = await response.json();
-            return data;
-        },
-        
-        addMessage(text, sender, timestamp = new Date()) {
-            this.messages.push({
-                text,
-                sender,
-                timestamp,
-            });
-        },
+  // Add a new message to the chat
+  const addMessage = (message) => {
+    messages.value.push(message)
+  }
 
-        async sendMessage(userMessage) {
-            if (!userMessage.trim() || this.isLoading) return;
-            
-            // Add user message
-            this.addMessage(userMessage, 'user');
-            
-            try {
-                this.isLoading = true;
-                this.isTyping = true;
-                
-                // Simulate typing delay
-                await new Promise(resolve => setTimeout(resolve, 800));
-                
-                const url = import.meta.env.VITE_N8N_API + import.meta.env.VITE_N8N_ENDPOINT;
-                const token = import.meta.env.VITE_N8N_TOKEN;
-                const response = await fetch(
-                    url,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                            "Content-Type": "application/json"
-                        },
-                        method: "POST",
-                        body: JSON.stringify({ message: userMessage })
-                    }
-                );
-                
-                if (!response.ok) {
-                    throw new Error('Error en la respuesta del servidor');
-                }
-                
-                const result = await response.json();
-                
-                // Add bot response
-                this.addMessage(result.response || 'Lo siento, no pude procesar tu mensaje.', 'bot');
-                
-                return result;
-            } catch (error) {
-                console.error('Error sending message:', error);
-                this.errorMessage = 'Lo siento, hubo un error al procesar tu mensaje. Por favor, intenta de nuevo.';
-                return { error: true, message: error.message };
-            } finally {
-                this.isLoading = false;
-                this.isTyping = false;
-            }
-        },
+  // Simulate bot response
+  const getBotResponse = async (userMessage) => {
+    isLoading.value = true
+    
+    try {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      const responses = [
+        "I understand what you're saying.",
+        "That's an interesting point!",
+        "Could you elaborate on that?",
+        "I'm still learning, but I'll do my best to help.",
+        "Thanks for sharing that with me!"
+      ]
+      
+      const randomResponse = responses[Math.floor(Math.random() * responses.length)]
+      
+      addMessage({
+        id: Date.now(),
+        text: randomResponse,
+        sender: 'bot',
+        timestamp: new Date().toISOString()
+      })
+    } catch (err) {
+      error.value = 'Failed to get bot response'
+      console.error('Error:', err)
+    } finally {
+      isLoading.value = false
+    }
+  }
 
-        clearError() {
-            this.errorMessage = '';
-        },
-    },
-});
+  // Send a message (user)
+  const sendMessage = async (messageText) => {
+    if (!messageText.trim()) return
+    
+    const userMessage = {
+      id: Date.now(),
+      text: messageText,
+      sender: 'user',
+      timestamp: new Date().toISOString()
+    }
+    
+    addMessage(userMessage)
+    await getBotResponse(userMessage)
+  }
+
+  return {
+    messages,
+    displayedMessages,
+    isLoading,
+    error,
+    sendMessage,
+    addMessage
+  }
+})

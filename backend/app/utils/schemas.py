@@ -23,7 +23,7 @@ class Headline(BaseModel):
 class BookSearchResponse(BaseModel):
     status: str = "success"
     count: int
-    books: list[Book]
+    books: list[str]
 
 class HeadlinesResponse(BaseModel):
     status: str = "success"

@@ -13,7 +13,7 @@ import os
 import urllib3
 # Configure logging
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
@@ -138,7 +138,7 @@ class HackerNewsScraper:
                 except Exception as e:
                     logger.error(f"Error closing thread driver: {str(e)}")
 
-    def fetch_top_stories(self, pages: int = 5) -> List[Dict[str, any]]:
+    def fetch_top_stories(self, pages: int = 1) -> List[Dict[str, any]]:
         """
         Fetch top stories from Hacker News using multiple threads
         :param pages: Number of pages to scrape (default: 5)

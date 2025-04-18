@@ -85,21 +85,16 @@ async def get_books(
 ):
     """
     Obtiene una lista de libros, con opción de filtrar por categoría.
-    
-    Ejemplos de categorías disponibles:
-    - novela
-    - ciencia ficción
-    - literatura infantil
     """
     try:
         books = BookRepository()
-        result = books.get_books(category=category)
+        result =await books.get_books(category=category)
         print(category)
         print(result)
         return {
             "success": True,
             "count": len(result),
-            "results": result
+            "tittles": result
         }
     
     except Exception as e:
@@ -108,4 +103,24 @@ async def get_books(
             detail=f"Error al obtener los libros: {str(e)}"
         )
 
+@app.get("/books/categories")
+async def get_all_categories():
+    """
+    Obtiene una lista de todas las categorias
+    """
+
+    try:
+        books = BookRepository()
+        result = await books.get_categories()
+
+        return {
+            "success": True,
+            "count": len(result),
+            "categories": result
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error al obtener las categorias: {str(e)}"
+        )
 

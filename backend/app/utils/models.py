@@ -70,7 +70,8 @@ class BookRepository:
         async with self.redis.pipeline() as pipe:
             await pipe.set(book_key, book.model_dump_json()).execute()
             await pipe.sadd(f"category:{book.category.lower()}", book_key).execute()
-        
+            await pipe.sadd("categories",book.category.lower()).execute()
+
         return book.id
 
     async def get_books(self, category: Optional[str] = None) -> List[str]:
@@ -78,7 +79,7 @@ class BookRepository:
         try:
             # 1. Get book keys
             book_keys = (
-                [f"book:{book_id}" for book_id in await self.redis.smembers(f"category:{category.lower()}")]
+                [book_id for book_id in await self.redis.smembers(f"category:{category.lower()}")]
                 if category
                 else [key for key in await self.redis.keys('book:*')]
             )
@@ -108,6 +109,19 @@ class BookRepository:
         except Exception as e:
             logging.error(f"Error in get_books: {str(e)}")
             return []
+
+
+    async def get_categories(self) -> list[str]:
+        """Retrieve all categories from Redis set.
+        """
+        try:
+            categories = await self.redis.smembers("categories")
+            return list(categories) if categories else []
+            
+        except Exception as e:
+            logging.error(f"Failed to retrieve categories: {str(e)}")
+            return []
+
 
     async def clear_all(self):
         """Clear all book data from Redis"""

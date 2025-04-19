@@ -53,7 +53,7 @@ This project is a comprehensive solution for web scraping, API management, and w
 - **Scraping**: BeautifulSoup + Selenium
 - **Backend**: FastAPI + Redis
 - **Automation**: n8n with Geminis Flash 2.0
-- **Frontend**: Vuetufy
+- **Frontend**: Vuetify
 - **Infrastructure**: Docker Compose
 
 ## System Architecture
@@ -68,7 +68,7 @@ This project is a comprehensive solution for web scraping, API management, and w
 
 2. **Installation**:
    ```docker-compose up```
-   
+
 3. **Access Services**:
    - Frontend: http://localhost:13000
    - API Docs: http://localhost:18000/docs

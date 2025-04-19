@@ -44,6 +44,8 @@ services:
     container_name: frodo-frontend
     ports:
       - "13000:80"
+    environment:
+      - N8N_ENDPOINT=/api/webhook/ask
     depends_on:
       - n8n
 
@@ -63,7 +65,7 @@ services:
       - N8N_SECURE_COOKIE=false
       - N8N_RUNNERS_ENABLED=true
     volumes:
-      - n8n_data:/home/node/.n8n
+      - ./n8n_data:/home/node/.n8n
     depends_on:
       - redis
 

@@ -14,27 +14,27 @@ export const useChatStore = defineStore('chat', () => {
     messages.value.push(message)
   }
 
-  // Simulate bot response
   const getBotResponse = async (userMessage) => {
     isLoading.value = true
     
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      const url = import.meta.env.VITE_N8N_ENDPOINT;
+      const response = await fetch(
+          url,
+          {
+              headers: {
+                  "Content-Type": "application/json"
+              },
+              method: "POST",
+              body: JSON.stringify({ 'question': userMessage.text })
+          }
+      );
       
-      const responses = [
-        "I understand what you're saying.",
-        "That's an interesting point!",
-        "Could you elaborate on that?",
-        "I'm still learning, but I'll do my best to help.",
-        "Thanks for sharing that with me!"
-      ]
-      
-      const randomResponse = responses[Math.floor(Math.random() * responses.length)]
-      
+      const data = await response.json()
+         
       addMessage({
         id: Date.now(),
-        text: randomResponse,
+        text: data.output,
         sender: 'bot',
         timestamp: new Date().toISOString()
       })

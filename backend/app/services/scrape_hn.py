@@ -49,8 +49,8 @@ class HackerNewsScraper:
                 command_executor=settings.selenium_command_executor,
                 options=self.driver_options
             )
-            self.driver.set_page_load_timeout(120)
-            self.driver.set_script_timeout(120)
+            self.driver.set_page_load_timeout(30)
+            self.driver.set_script_timeout(30)
             logger.info("Successfully connected to Selenium")
         except WebDriverException as e:
             logger.error(f"Failed to connect to Selenium: {str(e)}")

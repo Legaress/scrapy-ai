@@ -6,6 +6,7 @@ const chatStore = useChatStore()
 const message = ref('')
 
 const sendMessage = () => {
+  console.log("Submit")
   if (message.value && message.value.trim()) {
     chatStore.sendMessage(message.value)
     message.value = ''
@@ -14,8 +15,9 @@ const sendMessage = () => {
 </script>
 
 <template>
-  <v-form @submit.prevent="sendMessage" class="message-input">
     <v-text-field
+    @keydown.enter="sendMessage"
+      class="message-input"
       v-model="message"
       label="Type your message"
       variant="outlined"
@@ -29,14 +31,16 @@ const sendMessage = () => {
           variant="text"
           type="submit"
           :disabled="!message || !message.trim() || chatStore.isLoading"
+          :loading="chatStore.isLoading"
+          @click.prevent="sendMessage"
         ></v-btn>
       </template>
     </v-text-field>
-  </v-form>
 </template>
 
 <style scoped>
 .message-input {
+  width: 100%;
   padding: 8px;
 }
 </style>

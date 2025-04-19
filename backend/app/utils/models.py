@@ -74,7 +74,7 @@ class BookRepository:
 
         return book.id
 
-    async def get_books(self, category: Optional[str] = None) -> List[str]:
+    async def get_books(self, category: Optional[str] = None) -> List[Book]:
         """Retrieve BOOK TITLES from Redis, optionally filtered by category"""
         try:
             # 1. Get book keys
@@ -93,18 +93,18 @@ class BookRepository:
                     await pipe.get(key)
                 book_data_list = await pipe.execute()
 
-            # 3. Extract only titles
-            titles = []
+            # 3. Extract books
+            books = []
             for key, book_data in zip(book_keys, book_data_list):
                 if book_data:
                     try:
                         book_dict = json.loads(book_data)
-                        titles.append(book_dict['title'])
+                        books.append(book_dict)
                     except (json.JSONDecodeError, KeyError) as e:
                         logging.warning(f"Error processing book {key}: {str(e)}")
                         continue
             
-            return titles
+            return books
 
         except Exception as e:
             logging.error(f"Error in get_books: {str(e)}")

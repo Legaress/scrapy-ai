@@ -1,10 +1,18 @@
-/**
- * src/styles/settings.scss
- *
- * Configures SASS variables and Vuetify overwrites
- */
+// Sobrescribe variables de Vuetify primero
+$body-font-family: 'Noto Sans', sans-serif;
+$heading-font-family: 'Noto Sans', sans-serif;
 
-// https://vuetifyjs.com/features/sass-variables/`
-// @use 'vuetify/settings' with (
-//   $color-pack: false
-// );
+// Aplica la fuente globalmente
+body {
+  font-family: $body-font-family;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// Opcional: Sobrescribe estilos específicos
+.v-application {
+  font-family: $body-font-family !important;
+  .title { // Para componentes con clase .title
+    font-family: $heading-font-family !important;
+  }
+}

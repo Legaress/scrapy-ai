@@ -1,19 +1,15 @@
 <template>
     <v-card class="welcome-card" elevation="5">
-      <!-- Encabezado con logo/avatar -->
       <div class="header">
         <v-avatar size="120" class="bot-avatar">
-          <!-- Opcional: ícono si no hay imagen -->
-          <v-icon v-if="!avatarLoaded" size="80" color="primary">mdi-robot-happy</v-icon>
+          <v-icon size="80" color="primary">mdi-robot-happy</v-icon>
         </v-avatar>
-        <h1 class="text-h4 primary--text">¡Hola, soy AsistBot!</h1>
+        <h1 class="text-h4 primary--text">Hello, I'm ScrapyBot!</h1>
       </div>
   
-      <!-- Cuerpo informativo -->
       <v-card-text class="content">
         <p class="text-body-1">
-          Soy un chatbot inteligente creado como parte del <strong>proceso de evaluación técnica</strong> 
-          para [Nombre de la Empresa]. Mi objetivo es demostrar habilidades en:
+          I'm an intelligent chatbot designed to be your knowledge companion. Here's what I can of 
         </p>
         
         <v-list dense class="feature-list">
@@ -26,7 +22,7 @@
         </v-list>
   
         <v-alert type="info" variant="tonal" class="my-4">
-          <strong>Nota:</strong> Este proyecto utiliza Vue 3, Vuetify, Pinia y Vue Router.
+          <strong>Nota:</strong> Ask me anything about books or tech news!
         </v-alert>
       </v-card-text>
   
@@ -58,14 +54,10 @@
   import { ref } from 'vue';
   import router from '@/router';
   
-  const avatarLoaded = ref(true); // Cambiar a false si no hay imagen
   const features = ref([
-    'Vue 3 Composition API',
-    'Integración con APIs de IA',
-    'Diseño responsive con Vuetify',
-    'Gestión de estado con Pinia',
-    'Enrutamiento con Vue Router',
-    'Personalización completa'
+    'Access to my extensive book database',
+  'Up-to-date information from Hacker News',
+  'Quick summaries of trending tech topics',
   ]);
   
   const startChat = () => {
@@ -73,24 +65,24 @@
   };
   
   const viewSettings = () => {
-    router.push('/settings');
+    alert("in develoment phase")
   };
   </script>
   
   <style scoped>
   .welcome-card {
     max-width: 600px;
-    margin: 2rem auto;
-    padding: 2rem;
+    margin: 24px auto;
+    padding: 24px;
     text-align: center;
   }
   
   .header {
-    margin-bottom: 1.5rem;
+    margin-bottom: 18px;
   }
   
   .bot-avatar {
-    margin: 0 auto 1rem;
+    margin: 0 auto 12px;
     border: 3px solid rgb(var(--v-theme-primary));
   }
   
@@ -102,7 +94,7 @@
   .actions {
     justify-content: center;
     gap: 12px;
-    padding: 1rem;
+    padding: 12px;
   }
   
   .start-button {

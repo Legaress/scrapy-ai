@@ -16,7 +16,7 @@ services:
       - SE_NODE_ENABLE_MANAGED_DOWNLOADS=true
       - SE_OPTS=--enable-managed-downloads true
       - SE_LOG_LEVEL=INFO
-    #      - SE_BROWSER_ARGS_INCOGNITO=--incognitos
+    # - SE_BROWSER_ARGS_INCOGNITO=--incognitos
     restart: always
     shm_size: 4gb
 
@@ -27,7 +27,7 @@ services:
     command: poetry run uvicorn main:app --reload --host 0.0.0.0 --port 7013
     develop:
       watch:
-        - action: sync+restart
+        - action: sync
           path: ./backend/app
           target: /app
     ports:
@@ -42,19 +42,8 @@ services:
     build:
       context: ./frontend
     container_name: frodo-frontend
-    command: npm run dev -- --host
-    develop:
-      watch:
-        - action: sync
-          path: ./frontend/app
-          target: /app
-          ignore:
-            - node_modules/
-        - action: rebuild
-          path: ./frontend/app/package.json
-          target: /app/package.json
     ports:
-      - "13000:3000"
+      - "13000:80"
     depends_on:
       - n8n
 

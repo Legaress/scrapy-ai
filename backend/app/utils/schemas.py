@@ -3,7 +3,7 @@ from pydantic import BaseModel
 class BookBase(BaseModel):
     title: str
     category: str
-    price: str
+    price: float
     image_url: str
 
 class BookCreate(BookBase):
@@ -23,9 +23,14 @@ class Headline(BaseModel):
 class BookSearchResponse(BaseModel):
     status: str = "success"
     count: int
-    books: list[str]
+    books: list[Book]
 
 class HeadlinesResponse(BaseModel):
     status: str = "success"
     count: int
     headlines: list[Headline]
+
+class CategoriesResponse(BaseModel):
+    status: str = "success"
+    count: int
+    categories : list[str]
